@@ -2,10 +2,17 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { Avatar } from "@/components/Avatar";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { auth, signInWithGoogle, signOutUser } from "@/lib/firebase";
 import { ADMIN_EMAIL } from "@/lib/event-config";
 import { seedQuestions, subscribeAdminRsvps, type RsvpRecord } from "@/lib/rsvp";
+import {
+  addQuestion,
+  deleteQuestion,
+  subscribeQuestions,
+  type QuestionRecord,
+} from "@/lib/questions";
 import {
   addWishlistItem,
   deleteWishlistItem,
@@ -32,6 +39,11 @@ export default function AdminPage() {
   const [addingWish, setAddingWish] = useState(false);
   const [wishError, setWishError] = useState("");
 
+  const [questions, setQuestions] = useState<QuestionRecord[]>([]);
+  const [newQuestionText, setNewQuestionText] = useState("");
+  const [addingQuestion, setAddingQuestion] = useState(false);
+  const [questionError, setQuestionError] = useState("");
+
   useEffect(() => onAuthStateChanged(auth, setUser), []);
 
   const isAdmin = user?.email === ADMIN_EMAIL;
@@ -44,6 +56,11 @@ export default function AdminPage() {
   useEffect(() => {
     if (!isAdmin) return;
     return subscribeWishlist(setWishlist);
+  }, [isAdmin]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    return subscribeQuestions(setQuestions);
   }, [isAdmin]);
 
   async function handleAddWish(e: FormEvent) {
@@ -76,7 +93,8 @@ export default function AdminPage() {
     setAuthError("");
     try {
       await signInWithGoogle();
-    } catch {
+    } catch (err) {
+      console.error("signInWithGoogle failed", err);
       setAuthError("No se pudo iniciar sesión. Intenta de nuevo.");
     }
   }
@@ -95,6 +113,30 @@ export default function AdminPage() {
       setSeedStatus("No se pudo sembrar el banco de preguntas.");
     } finally {
       setSeeding(false);
+    }
+  }
+
+  async function handleAddQuestion(e: FormEvent) {
+    e.preventDefault();
+    if (!newQuestionText.trim()) return;
+
+    setAddingQuestion(true);
+    setQuestionError("");
+    try {
+      await addQuestion(newQuestionText);
+      setNewQuestionText("");
+    } catch {
+      setQuestionError("No se pudo agregar la pregunta. Intenta de nuevo.");
+    } finally {
+      setAddingQuestion(false);
+    }
+  }
+
+  async function handleDeleteQuestion(id: string) {
+    try {
+      await deleteQuestion(id);
+    } catch {
+      setQuestionError("No se pudo eliminar la pregunta.");
     }
   }
 
@@ -208,6 +250,61 @@ export default function AdminPage() {
           {seedStatus && <p className="mt-2 text-xs text-muted">{seedStatus}</p>}
         </div>
 
+        <div className="space-y-4">
+          <div>
+            <h2 className="font-stencil text-xl text-amber-bright">Banco de preguntas</h2>
+            <p className="text-sm text-muted">
+              Agrega o elimina preguntas del interrogatorio. Eliminar una pregunta ya asignada
+              no borra la declaración del testigo — solo la saca del banco disponible.
+            </p>
+          </div>
+
+          <form onSubmit={handleAddQuestion} className="case-card flex flex-wrap gap-3 px-5 py-4">
+            <input
+              type="text"
+              required
+              maxLength={200}
+              value={newQuestionText}
+              onChange={(e) => setNewQuestionText(e.target.value)}
+              placeholder="Escribe una nueva pregunta..."
+              className="min-w-[200px] flex-1 border border-paper-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-amber"
+            />
+            <button
+              type="submit"
+              disabled={!newQuestionText.trim() || addingQuestion}
+              className="shrink-0 border border-amber px-4 py-2 font-mono text-xs uppercase tracking-widest text-amber-bright transition-colors hover:bg-amber hover:text-background disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {addingQuestion ? "Agregando..." : "Agregar pregunta"}
+            </button>
+            {questionError && <p className="w-full text-xs text-red-bright">{questionError}</p>}
+          </form>
+
+          <div className="case-card max-h-96 divide-y divide-paper-border overflow-y-auto">
+            {questions.map((q) => (
+              <div key={q.id} className="flex items-center gap-3 px-4 py-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-foreground">{q.text}</p>
+                  <p className="mt-0.5 text-xs text-muted">
+                    {q.taken ? `Asignada a ${q.assignedToName ?? "—"}` : "Disponible"}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteQuestion(q.id)}
+                  className="shrink-0 border border-paper-border px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-muted transition-colors hover:border-red-bright hover:text-red-bright"
+                >
+                  Eliminar
+                </button>
+              </div>
+            ))}
+            {questions.length === 0 && (
+              <p className="px-4 py-6 text-center text-sm text-muted">
+                Aún no hay preguntas en el banco.
+              </p>
+            )}
+          </div>
+        </div>
+
         <div className="case-card overflow-x-auto">
           <table className="w-full min-w-[560px] text-left text-sm">
             <thead>
@@ -221,7 +318,12 @@ export default function AdminPage() {
             <tbody className="divide-y divide-paper-border">
               {rsvps.map((r) => (
                 <tr key={r.id}>
-                  <td className="px-4 py-3 text-foreground">{r.name}</td>
+                  <td className="px-4 py-3 text-foreground">
+                    <div className="flex items-center gap-2">
+                      <Avatar photoURL={r.photoURL} name={r.name} size={28} />
+                      {r.name}
+                    </div>
+                  </td>
                   <td className="px-4 py-3 text-foreground">
                     {CONFIRMATION_LABEL[r.confirmation]}
                   </td>

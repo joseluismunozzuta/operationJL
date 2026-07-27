@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Avatar } from "@/components/Avatar";
 import { EVENT_DATE } from "@/lib/event-config";
 import { getRevealedRsvps, type RsvpRecord } from "@/lib/rsvp";
 
@@ -73,13 +74,16 @@ export function GroupReveal() {
           {phase === "loaded" && rsvps.length > 0 && (
             <ul className="divide-y divide-paper-border text-left">
               {rsvps.map((r) => (
-                <li key={r.id} className="py-4">
-                  <p className="font-mono text-xs uppercase tracking-widest text-amber-bright">
-                    {r.name}
-                  </p>
-                  <p className="mt-1 text-sm text-foreground">
-                    {r.questionText ?? "Sin pregunta asignada"}
-                  </p>
+                <li key={r.id} className="flex items-start gap-3 py-4">
+                  <Avatar photoURL={r.photoURL} name={r.name} size={36} />
+                  <div>
+                    <p className="font-mono text-xs uppercase tracking-widest text-amber-bright">
+                      {r.name}
+                    </p>
+                    <p className="mt-1 text-sm text-foreground">
+                      {r.questionText ?? "Sin pregunta asignada"}
+                    </p>
+                  </div>
                 </li>
               ))}
             </ul>

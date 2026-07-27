@@ -26,6 +26,7 @@ export type RsvpRecord = {
   questionId: string | null;
   questionText: string | null;
   uid: string;
+  photoURL: string | null;
   createdAt: Timestamp | null;
 };
 
@@ -109,6 +110,7 @@ export async function submitRsvp(rawName: string, confirmation: Confirmation) {
     name,
     confirmation,
     uid: user.uid,
+    photoURL: user.photoURL ?? null,
     questionId: assigned?.id ?? null,
     questionText: assigned?.text ?? null,
     createdAt: existing?.createdAt ?? serverTimestamp(),
@@ -146,6 +148,7 @@ function toRsvpRecord(
     questionId: (data.questionId as string | null) ?? null,
     questionText: (data.questionText as string | null) ?? null,
     uid: (data.uid as string) ?? "",
+    photoURL: (data.photoURL as string | null) ?? null,
     createdAt: (data.createdAt as Timestamp | null) ?? null,
   };
 }

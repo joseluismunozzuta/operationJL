@@ -53,7 +53,8 @@ export function RsvpForm() {
     setSigningIn(true);
     try {
       await signInWithGoogle();
-    } catch {
+    } catch (err) {
+      console.error("signInWithGoogle failed", err);
       setError("No se pudo iniciar sesión. Intenta de nuevo.");
     } finally {
       setSigningIn(false);

@@ -55,7 +55,7 @@ service cloud.firestore {
           && request.resource.data.name.size() < 80
           && request.resource.data.confirmation in ['si', 'no']
           && request.resource.data.keys().hasOnly(
-               ['name', 'confirmation', 'uid', 'questionId', 'questionText', 'createdAt']
+               ['name', 'confirmation', 'uid', 'photoURL', 'questionId', 'questionText', 'createdAt']
              );
       }
 

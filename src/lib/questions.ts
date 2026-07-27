@@ -1,7 +1,54 @@
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  onSnapshot,
+} from "firebase/firestore";
+import { db } from "./firebase";
+
 export type QuestionSeed = {
   id: string;
   text: string;
 };
+
+export type QuestionRecord = {
+  id: string;
+  text: string;
+  taken: boolean;
+  assignedToName: string | null;
+};
+
+function toQuestionRecord(id: string, data: Record<string, unknown>): QuestionRecord {
+  return {
+    id,
+    text: (data.text as string) ?? "",
+    taken: (data.taken as boolean) ?? false,
+    assignedToName: (data.assignedToName as string | null) ?? null,
+  };
+}
+
+export function subscribeQuestions(callback: (questions: QuestionRecord[]) => void) {
+  return onSnapshot(collection(db, "questions"), (snap) => {
+    callback(
+      snap.docs
+        .map((d) => toQuestionRecord(d.id, d.data()))
+        .sort((a, b) => a.id.localeCompare(b.id))
+    );
+  });
+}
+
+export async function addQuestion(text: string) {
+  await addDoc(collection(db, "questions"), {
+    text: text.trim(),
+    taken: false,
+    assignedToName: null,
+  });
+}
+
+export async function deleteQuestion(id: string) {
+  await deleteDoc(doc(db, "questions", id));
+}
 
 // Banco de 30 preguntas para el interrogatorio grupal. IDs fijos para que el
 // sembrado (seedQuestions) sea idempotente.
