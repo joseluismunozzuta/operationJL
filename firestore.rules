@@ -1,0 +1,82 @@
+rules_version = '2';
+
+// Reglas para el proyecto Firebase "operationjl".
+// Pegar manualmente en: Firebase Console → Firestore Database → Reglas.
+//
+// Requiere que en Authentication → Sign-in method esté habilitado el
+// proveedor "Google" (tanto invitados como admin inician sesión con Google;
+// el admin es quien usa la cuenta ADMIN_EMAIL).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'joseluismunozzuta@gmail.com';
+    }
+
+    // Instante exacto del evento: 2026-08-05 20:00 America/Lima (UTC-5)
+    // == 2026-08-06T01:00:00Z. Si cambias EVENT_DATE_ISO en
+    // src/lib/event-config.ts, actualiza también este valor.
+    function eventHasStarted() {
+      return request.time > timestamp.date(2026, 8, 6) + duration.value(1, 'h');
+    }
+
+    match /questions/{questionId} {
+      // El banco de preguntas no es información sensible: lectura pública
+      // (se necesita para que el cliente sepa cuáles están disponibles).
+      allow read: if true;
+
+      // Solo se permite tocar taken/assignedToName — vía la transacción de
+      // asignación o la liberación en src/lib/rsvp.ts (esta última ocurre
+      // cuando un testigo cambia su respuesta de "sí" a "no").
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['taken', 'assignedToName'])
+        && request.resource.data.taken is bool
+        && (request.resource.data.assignedToName == null || request.resource.data.assignedToName is string);
+
+      // Solo el admin siembra/borra el banco (botón en /admin).
+      allow create, delete: if isAdmin();
+    }
+
+    match /rsvps/{rsvpId} {
+      // El id del documento es el uid de la cuenta de Google del testigo:
+      // reenviar el formulario — desde cualquier dispositivo, con la misma
+      // cuenta — actualiza su propia declaración en vez de crear un
+      // duplicado.
+      function isOwnDoc() {
+        return request.auth != null && rsvpId == request.auth.uid;
+      }
+
+      function isValidRsvp() {
+        return request.resource.data.uid == request.auth.uid
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() < 80
+          && request.resource.data.confirmation in ['si', 'no']
+          && request.resource.data.keys().hasOnly(
+               ['name', 'confirmation', 'uid', 'questionId', 'questionText', 'createdAt']
+             );
+      }
+
+      allow create, update: if isOwnDoc() && isValidRsvp();
+
+      // Lectura: el admin siempre puede verla (panel); un testigo puede leer
+      // su propia declaración (para ver/actualizar su estado y su pregunta);
+      // cualquiera puede ver la lista completa solo a partir del instante
+      // real del evento (revelación grupal). No es un simple check de UI:
+      // Firestore lo rechaza server-side hasta que llegue esa hora de verdad.
+      allow read: if isAdmin() || isOwnDoc() || eventHasStarted();
+
+      allow delete: if isAdmin();
+    }
+
+    match /wishlist/{itemId} {
+      // Lista de regalos: no es información sensible, lectura pública para
+      // que la sección "Evidencia requerida" la muestre a los invitados.
+      allow read: if true;
+
+      allow create, update, delete: if isAdmin();
+    }
+  }
+}
