@@ -68,7 +68,7 @@ body {
 .case-card {
   background: var(--paper);
   border: 1px solid var(--paper-border);
-  border-radius: 2px;
+  border-radius: 8px;
   box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.6);
 }
 

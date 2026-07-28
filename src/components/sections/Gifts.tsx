@@ -92,12 +92,12 @@ function WishlistCard({
             href={item.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-foreground hover:text-amber-bright"
+            className="text-md text-foreground hover:text-amber-bright"
           >
             {item.title}
           </a>
         ) : (
-          <p className="text-sm text-foreground">{item.title}</p>
+          <p className="text-md text-foreground">{item.title}</p>
         )}
         {item.description && (
           <p className="whitespace-pre-wrap break-words text-xs text-muted">
@@ -216,7 +216,10 @@ export function Gifts() {
 
         {lockableItems.length > 0 && (
           <div className="mt-8">
-            <div className="border-2 border-red-bright bg-red-bright/10 px-4 py-3">
+            <h3 className="mt-6 font-mono text-xs uppercase tracking-widest text-muted">
+              Evidencia exclusiva — solo un ejemplar
+            </h3>
+            <div className="my-3 border-2 rounded-xl border-red-bright bg-red-bright/10 px-4 py-3">
               <p className="stamp text-red-bright text-xs">Pieza única</p>
               <p className="mt-2 text-sm text-foreground">
                 Estas no se pueden repetir. Si decides adquirir una, márcala como{" "}
@@ -224,10 +227,6 @@ export function Gifts() {
                 la duplique.
               </p>
             </div>
-
-            <h3 className="mt-6 font-mono text-xs uppercase tracking-widest text-muted">
-              Evidencia exclusiva — solo un ejemplar
-            </h3>
             <div className="mt-3 grid grid-cols-2 gap-3">
               {lockableItems.map((item) => (
                 <WishlistCard

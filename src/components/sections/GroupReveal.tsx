@@ -58,7 +58,7 @@ export function GroupReveal() {
       <div className="mx-auto max-w-lg">
         <h2 className="font-stencil text-2xl text-amber-bright">Revelación del expediente</h2>
         <p className="mt-2 text-sm text-muted">
-          El día del caso, aquí aparece quién declaró qué.
+          El día del caso, aquí aparece quién declara qué.
         </p>
 
         <div className="case-card mt-8 px-6 py-10 text-center">

@@ -4,7 +4,13 @@ import { useEffect, useState } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { auth, signInWithGoogle, signOutUser } from "@/lib/firebase";
 import { ADMIN_EMAIL } from "@/lib/event-config";
-import { getMyRsvp, submitRsvp, type Confirmation, type RsvpRecord } from "@/lib/rsvp";
+import {
+  getMyRsvp,
+  rerollQuestion,
+  submitRsvp,
+  type Confirmation,
+  type RsvpRecord,
+} from "@/lib/rsvp";
 import { getQuestionText } from "@/lib/questions";
 
 // Resuelve el rsvp con el texto de la pregunta en vivo (por id) en vez de la
@@ -30,6 +36,8 @@ export function RsvpForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [envelopeOpen, setEnvelopeOpen] = useState(false);
+  const [rerolling, setRerolling] = useState(false);
+  const [rerollNotice, setRerollNotice] = useState("");
 
   useEffect(() => onAuthStateChanged(auth, setUser), []);
 
@@ -85,6 +93,25 @@ export function RsvpForm() {
       setError("No se pudo registrar tu declaración. Intenta de nuevo.");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleReroll() {
+    if (!guestUser) return;
+    setRerolling(true);
+    setError("");
+    setRerollNotice("");
+    try {
+      const assigned = await rerollQuestion();
+      if (!assigned) {
+        setRerollNotice("No hay más preguntas libres en el banco — te quedas con esta.");
+        return;
+      }
+      setMyRsvp(await resolveMyRsvp(guestUser.uid));
+    } catch {
+      setError("No se pudo cambiar la pregunta. Intenta de nuevo.");
+    } finally {
+      setRerolling(false);
     }
   }
 
@@ -216,6 +243,21 @@ export function RsvpForm() {
               <p className="mt-4 text-xs text-muted">
                 Guárdala en secreto hasta el día del caso.
               </p>
+
+              <button
+                type="button"
+                onClick={handleReroll}
+                disabled={rerolling}
+                className="mt-4 border border-paper-border px-4 py-2 font-mono text-xs uppercase tracking-widest text-muted transition-colors hover:border-amber hover:text-amber-bright disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {rerolling ? "Reasignando..." : "Cambiar mi testimonio"}
+              </button>
+              <p className="mt-2 text-xs text-muted">
+                ¿No te convence? Te damos otra del expediente.
+              </p>
+              {rerollNotice && (
+                <p className="mt-2 text-xs text-amber-bright">{rerollNotice}</p>
+              )}
             </div>
           </div>
         )}

@@ -41,11 +41,16 @@ function shuffle<T>(items: T[]): T[] {
   return result;
 }
 
-async function assignRandomQuestion(name: string): Promise<AssignedQuestion | null> {
+async function assignRandomQuestion(
+  name: string,
+  excludeQuestionId?: string | null
+): Promise<AssignedQuestion | null> {
   const availableSnap = await getDocs(
     query(collection(db, "questions"), where("taken", "==", false))
   );
-  const candidates = shuffle(availableSnap.docs.map((d) => d.id));
+  const candidates = shuffle(
+    availableSnap.docs.map((d) => d.id).filter((id) => id !== excludeQuestionId)
+  );
 
   for (const questionId of candidates) {
     try {
@@ -114,6 +119,42 @@ export async function submitRsvp(rawName: string, confirmation: Confirmation) {
     questionId: assigned?.id ?? null,
     questionText: assigned?.text ?? null,
     createdAt: existing?.createdAt ?? serverTimestamp(),
+  });
+
+  return assigned;
+}
+
+// Cambia la pregunta asignada a un testigo por otra del banco. Primero se
+// reclama la nueva (transacción atómica, igual que en la asignación inicial)
+// y recién entonces se libera la anterior — así, si el banco está agotado o
+// alguien gana la carrera, el testigo conserva la que ya tenía en vez de
+// quedarse sin ninguna. La pregunta actual queda excluida de los candidatos
+// para que "cambiar" siempre entregue una distinta.
+export async function rerollQuestion(): Promise<AssignedQuestion | null> {
+  const user = auth.currentUser;
+  if (!user) throw new Error("not-authenticated");
+
+  const rsvpRef = doc(db, "rsvps", user.uid);
+  const existingSnap = await getDoc(rsvpRef);
+  if (!existingSnap.exists()) throw new Error("rsvp-not-found");
+
+  const existing = existingSnap.data() as {
+    name: string;
+    confirmation: Confirmation;
+    questionId: string | null;
+  };
+  if (existing.confirmation !== "si") throw new Error("not-attending");
+
+  const assigned = await assignRandomQuestion(existing.name, existing.questionId);
+  if (!assigned) return null; // Banco agotado: conserva la pregunta actual.
+
+  if (existing.questionId) {
+    await releaseQuestion(existing.questionId);
+  }
+
+  await updateDoc(rsvpRef, {
+    questionId: assigned.id,
+    questionText: assigned.text,
   });
 
   return assigned;
