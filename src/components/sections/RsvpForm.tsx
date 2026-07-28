@@ -265,20 +265,26 @@ export function RsvpForm() {
                 Guárdala en secreto hasta el día del caso.
               </p>
 
-              <button
-                type="button"
-                onClick={handleReroll}
-                disabled={rerolling}
-                className="mt-4 border border-paper-border px-4 py-2 font-mono text-xs uppercase tracking-widest text-muted transition-colors hover:border-amber hover:text-amber-bright disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {rerolling ? "Reasignando..." : "Cambiar mi testimonio"}
-              </button>
-              <p className="mt-2 text-xs text-muted">
-                ¿No te convence? Te damos otra del expediente.
-              </p>
-              {rerollNotice && (
-                <p className="mt-2 text-xs text-amber-bright">{rerollNotice}</p>
-              )}
+              <div className="mt-6 border border-amber/50 bg-amber/5 px-4 py-4 text-left">
+                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-amber-bright">
+                  ¿No va contigo?
+                </p>
+                <p className="mt-2 text-sm text-foreground">
+                  Puedes cambiarla por otra que respondas mejor. Hay muchas en el expediente y
+                  no hay límite de cambios — quédate con la que te haga el mejor testigo.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleReroll}
+                  disabled={rerolling}
+                  className="mt-4 w-full border border-amber py-2.5 font-mono text-xs uppercase tracking-widest text-amber-bright transition-colors hover:bg-amber hover:text-background disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {rerolling ? "Reasignando..." : "🔄 Cambiar mi testimonio"}
+                </button>
+                {rerollNotice && (
+                  <p className="mt-3 text-xs text-amber-bright">{rerollNotice}</p>
+                )}
+              </div>
             </div>
           </div>
         )}
