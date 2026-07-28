@@ -28,9 +28,12 @@ export type RsvpRecord = {
   uid: string;
   photoURL: string | null;
   createdAt: Timestamp | null;
+  // Se llenan al escanear el QR de la puerta (ver src/lib/checkin.ts).
+  turn: number | null;
+  checkedInAt: Timestamp | null;
 };
 
-type AssignedQuestion = { id: string; text: string };
+export type AssignedQuestion = { id: string; text: string };
 
 function shuffle<T>(items: T[]): T[] {
   const result = [...items];
@@ -41,7 +44,7 @@ function shuffle<T>(items: T[]): T[] {
   return result;
 }
 
-async function assignRandomQuestion(
+export async function assignRandomQuestion(
   name: string,
   excludeQuestionId?: string | null
 ): Promise<AssignedQuestion | null> {
@@ -96,7 +99,14 @@ export async function submitRsvp(rawName: string, confirmation: Confirmation) {
 
   const existingSnap = await getDoc(rsvpRef);
   const existing = existingSnap.exists()
-    ? (existingSnap.data() as { confirmation: Confirmation; questionId: string | null; questionText: string | null; createdAt: Timestamp })
+    ? (existingSnap.data() as {
+        confirmation: Confirmation;
+        questionId: string | null;
+        questionText: string | null;
+        createdAt: Timestamp;
+        turn?: number | null;
+        checkedInAt?: Timestamp | null;
+      })
     : null;
 
   let assigned: AssignedQuestion | null = null;
@@ -119,6 +129,10 @@ export async function submitRsvp(rawName: string, confirmation: Confirmation) {
     questionId: assigned?.id ?? null,
     questionText: assigned?.text ?? null,
     createdAt: existing?.createdAt ?? serverTimestamp(),
+    // Se preservan: actualizar la declaración no debe borrar el ingreso ya
+    // registrado en la puerta ni el turno asignado.
+    turn: existing?.turn ?? null,
+    checkedInAt: existing?.checkedInAt ?? null,
   });
 
   return assigned;
@@ -191,7 +205,36 @@ function toRsvpRecord(
     uid: (data.uid as string) ?? "",
     photoURL: (data.photoURL as string | null) ?? null,
     createdAt: (data.createdAt as Timestamp | null) ?? null,
+    turn: (data.turn as number | null) ?? null,
+    checkedInAt: (data.checkedInAt as Timestamp | null) ?? null,
   };
+}
+
+// Suscripción para la pantalla de proyección: trae toda la colección (son
+// ~25 documentos) y filtra/ordena en el cliente, para no depender de índices
+// compuestos en Firestore.
+export function subscribeCheckedIn(callback: (rsvps: RsvpRecord[]) => void) {
+  return onSnapshot(collection(db, "rsvps"), (snap) => {
+    const all = snap.docs.map((d) => toRsvpRecord(d.id, d.data()));
+    callback(
+      all
+        .filter((r) => r.turn !== null)
+        .sort((a, b) => (a.turn ?? 0) - (b.turn ?? 0))
+    );
+  });
+}
+
+export function subscribeAllRsvps(
+  callback: (rsvps: RsvpRecord[]) => void,
+  onError?: (error: Error) => void
+) {
+  return onSnapshot(
+    collection(db, "rsvps"),
+    (snap) => callback(snap.docs.map((d) => toRsvpRecord(d.id, d.data()))),
+    // Firestore rechaza la lectura si aún no llega la hora del evento y no
+    // hay sesión de admin (ver las reglas de la colección rsvps).
+    (err) => onError?.(err)
+  );
 }
 
 export async function getMyRsvp(uid: string): Promise<RsvpRecord | null> {

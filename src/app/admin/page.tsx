@@ -282,6 +282,7 @@ export default function AdminPage() {
     total: rsvps.length,
     si: rsvps.filter((r) => r.confirmation === "si").length,
     no: rsvps.filter((r) => r.confirmation === "no").length,
+    presentes: rsvps.filter((r) => r.turn !== null).length,
   };
 
   // Texto en vivo por id — así una corrección en el banco de preguntas se
@@ -316,11 +317,12 @@ export default function AdminPage() {
           </button>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
             { label: "Total", value: counts.total },
             { label: "Sí", value: counts.si },
             { label: "No", value: counts.no },
+            { label: "Presentes", value: counts.presentes },
           ].map((c) => (
             <div key={c.label} className="case-card px-4 py-4 text-center">
               <div className="font-mono text-2xl text-amber-bright">{c.value}</div>
@@ -344,6 +346,27 @@ export default function AdminPage() {
             </button>
           </div>
           {seedStatus && <p className="mt-2 text-xs text-muted">{seedStatus}</p>}
+        </div>
+
+        <div className="case-card px-5 py-4">
+          <p className="text-sm text-muted">
+            El día del evento: abre la proyección en la TV y apunta el QR de la puerta a la
+            página de ingreso.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link
+              href="/proyeccion"
+              className="border border-amber px-4 py-2 font-mono text-xs uppercase tracking-widest text-amber-bright transition-colors hover:bg-amber hover:text-background"
+            >
+              Abrir proyección →
+            </Link>
+            <Link
+              href="/ingreso"
+              className="border border-paper-border px-4 py-2 font-mono text-xs uppercase tracking-widest text-muted transition-colors hover:border-amber hover:text-amber-bright"
+            >
+              Ver página de ingreso (QR)
+            </Link>
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -442,6 +465,7 @@ export default function AdminPage() {
           <table className="w-full min-w-[560px] text-left text-sm">
             <thead>
               <tr className="border-b border-paper-border text-xs uppercase tracking-widest text-muted">
+                <th className="px-4 py-3">Turno</th>
                 <th className="px-4 py-3">Nombre</th>
                 <th className="px-4 py-3">Confirmación</th>
                 <th className="px-4 py-3">Pregunta asignada</th>
@@ -451,6 +475,13 @@ export default function AdminPage() {
             <tbody className="divide-y divide-paper-border">
               {rsvps.map((r) => (
                 <tr key={r.id}>
+                  <td className="px-4 py-3">
+                    {r.turn !== null ? (
+                      <span className="font-mono text-amber-bright">{r.turn}</span>
+                    ) : (
+                      <span className="text-muted">—</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-foreground">
                     <div className="flex items-center gap-2">
                       <Avatar photoURL={r.photoURL} name={r.name} size={28} />
@@ -470,7 +501,7 @@ export default function AdminPage() {
               ))}
               {rsvps.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-6 text-center text-muted">
+                  <td colSpan={5} className="px-4 py-6 text-center text-muted">
                     Aún no hay declaraciones registradas.
                   </td>
                 </tr>

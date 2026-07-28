@@ -59,7 +59,8 @@ service cloud.firestore {
           && request.resource.data.name.size() < 80
           && request.resource.data.confirmation in ['si', 'no']
           && request.resource.data.keys().hasOnly(
-               ['name', 'confirmation', 'uid', 'photoURL', 'questionId', 'questionText', 'createdAt']
+               ['name', 'confirmation', 'uid', 'photoURL', 'questionId', 'questionText',
+                'createdAt', 'turn', 'checkedInAt']
              );
       }
 
@@ -71,6 +72,24 @@ service cloud.firestore {
       // real del evento (revelación grupal). No es un simple check de UI:
       // Firestore lo rechaza server-side hasta que llegue esa hora de verdad.
       allow read: if isAdmin() || isOwnDoc() || eventHasStarted();
+
+      allow delete: if isAdmin();
+    }
+
+    // Contador del turno de declaración, asignado al escanear el QR de la
+    // puerta (counters/checkin). Cualquier testigo autenticado puede tomar el
+    // siguiente número, pero solo puede incrementarlo de uno en uno — no
+    // reescribirlo a un valor arbitrario ni retroceder.
+    match /counters/checkin {
+      allow read: if request.auth != null;
+
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['lastTurn'])
+        && request.resource.data.lastTurn == 1;
+
+      allow update: if request.auth != null
+        && request.resource.data.keys().hasOnly(['lastTurn'])
+        && request.resource.data.lastTurn == resource.data.lastTurn + 1;
 
       allow delete: if isAdmin();
     }

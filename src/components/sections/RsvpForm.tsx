@@ -121,18 +121,39 @@ export function RsvpForm() {
     body = <p className="text-sm text-muted">Verificando sesión...</p>;
   } else if (guestUser === null) {
     body = (
-      <div className="case-card px-6 py-10 text-center">
-        <p className="text-sm text-muted">
-          Inicia sesión con Google para dejar constancia de tu asistencia.
+      <div className="case-card px-6 py-8 text-center">
+        <span className="stamp text-red-bright text-xs">Identificación requerida</span>
+
+        <p className="mt-8 text-base text-foreground">
+          Todo testigo debe identificarse antes de declarar.
         </p>
+
+        <p className="mt-3 text-sm text-muted">
+          Al confirmar tu asistencia, el expediente te asigna{" "}
+          <span className="text-amber-bright">una pregunta secreta</span> — esa es tu parte en
+          el interrogatorio grupal del día del caso.
+        </p>
+
+        <div className="mt-6 border-2 border-red-bright bg-red-bright/10 px-4 py-3 text-left">
+          <p className="text-sm text-foreground">
+            <strong>Importante:</strong> si no confirmas, no se te asigna pregunta y quedas
+            fuera del interrogatorio. Sin declaración no hay caso.
+          </p>
+        </div>
+
         <button
           type="button"
           onClick={handleSignIn}
           disabled={signingIn}
-          className="mt-6 border border-amber px-6 py-3 font-mono text-sm uppercase tracking-widest text-amber-bright transition-colors hover:bg-amber hover:text-background disabled:cursor-not-allowed disabled:opacity-40"
+          className="mt-6 w-full border border-amber bg-amber py-3 font-mono text-sm uppercase tracking-widest text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {signingIn ? "Conectando..." : "Iniciar sesión con Google"}
+          {signingIn ? "Conectando..." : "Identificarme y declarar"}
         </button>
+
+        <p className="mt-3 text-xs text-muted">
+          Solo se usa tu cuenta de Google para saber quién declara. Nada más.
+        </p>
+
         {error && <p className="mt-4 text-sm text-red-bright">{error}</p>}
       </div>
     );
@@ -270,7 +291,9 @@ export function RsvpForm() {
       <div className="mx-auto max-w-lg">
         <h2 className="font-stencil text-2xl text-amber-bright">Registro de testigo</h2>
         <p className="mt-2 text-sm text-muted">
-          Toda declaración queda archivada en el expediente. Puedes actualizarla cuando quieras.
+          {guestUser
+            ? "Toda declaración queda archivada en el expediente. Puedes actualizarla cuando quieras."
+            : "Este es el paso obligatorio del expediente: sin tu registro, no hay pregunta asignada ni lugar en el interrogatorio."}
         </p>
         <div className="mt-8">{body}</div>
       </div>
