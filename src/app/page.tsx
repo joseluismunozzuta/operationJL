@@ -9,7 +9,7 @@ import { GroupReveal } from "@/components/sections/GroupReveal";
 import { CASE_NUMBER } from "@/lib/event-config";
 
 const TABS = [
-  { href: "#hechos", label: "Hechos" },
+  { href: "#citacion", label: "Citación" },
   { href: "#registro", label: "Registro" },
   { href: "#evidencia", label: "Evidencia" },
   { href: "#interrogatorio", label: "Interrogatorio" },

@@ -35,6 +35,10 @@ service cloud.firestore {
         && request.resource.data.taken is bool
         && (request.resource.data.assignedToName == null || request.resource.data.assignedToName is string);
 
+      // El admin puede editar el texto (corregir una pregunta ya asignada
+      // sin tener que borrarla y perder el vínculo con el testigo).
+      allow update: if isAdmin();
+
       // Solo el admin siembra/borra el banco (botón en /admin).
       allow create, delete: if isAdmin();
     }
@@ -75,6 +79,24 @@ service cloud.firestore {
       // Lista de regalos: no es información sensible, lectura pública para
       // que la sección "Evidencia requerida" la muestre a los invitados.
       allow read: if true;
+
+      // Cualquier testigo autenticado puede marcar un elemento "bloqueable"
+      // como comprado (para que otros no lo compren también) — pero solo
+      // puede tocar esos tres campos, nunca el título/url/imagen/descripción
+      // ni el flag "lockable". Desmarcarlo (si al final no lo compró) solo
+      // puede hacerlo la misma cuenta que lo marcó (comparando su uid contra
+      // purchasedByUid) o el admin — así nadie más puede liberar por error
+      // la compra real de otra persona.
+      allow update: if request.auth != null
+        && resource.data.lockable == true
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['purchased', 'purchasedByName', 'purchasedByUid'])
+        && request.resource.data.purchased is bool
+        && (
+             request.resource.data.purchased == true
+             || isAdmin()
+             || request.auth.uid == resource.data.purchasedByUid
+           );
 
       allow create, update, delete: if isAdmin();
     }

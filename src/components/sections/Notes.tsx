@@ -1,6 +1,6 @@
 const NOTES = [
-  { label: "Código de vestimenta", value: "Casual noir — negro, gris, algún toque rojo o ámbar si te animas." },
-  { label: "Qué llevar", value: "Tu mejor coartada, ganas de investigar y hambre." },
+  { label: "Código de vestimenta", value: "Colores neutros." },
+  { label: "Qué llevar", value: "Tu mejor testimonio y algo de hambre." },
   { label: "Puntualidad", value: "Se recomienda llegar antes de la hora — los testigos tardíos serán interrogados primero." },
 ];
 

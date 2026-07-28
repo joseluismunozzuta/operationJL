@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Special_Elite } from "next/font/google";
 import "./globals.css";
+import { CASE_NUMBER } from "@/lib/event-config";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,7 +20,7 @@ const specialElite = Special_Elite({
 });
 
 export const metadata: Metadata = {
-  title: "CASO N.° 001 — Expediente JL",
+  title: `CASO N.° ${CASE_NUMBER} — Expediente JL`,
   description: "Expediente confidencial. Acceso restringido a testigos citados.",
 };
 

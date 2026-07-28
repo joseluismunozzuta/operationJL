@@ -20,11 +20,12 @@ export function Facts() {
   const formattedTime = timeFormatter.format(EVENT_DATE);
 
   return (
-    <section id="hechos" className="scroll-mt-20 px-6 py-20">
+    <section id="citacion" className="scroll-mt-20 px-6 py-20">
       <div className="mx-auto max-w-lg">
-        <h2 className="font-stencil text-2xl text-amber-bright">Los hechos</h2>
+        <h2 className="font-stencil text-2xl text-amber-bright">La citación</h2>
         <p className="mt-2 text-sm text-muted">
-          Datos verificados de la investigación. No se admiten coartadas.
+          Estos son los datos de tu citación: fecha, hora y lugar donde debes presentarte a
+          declarar. Sin excusas.
         </p>
 
         <dl className="case-card mt-8 divide-y divide-paper-border">

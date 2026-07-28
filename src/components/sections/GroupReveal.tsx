@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import { Avatar } from "@/components/Avatar";
 import { EVENT_DATE } from "@/lib/event-config";
 import { getRevealedRsvps, type RsvpRecord } from "@/lib/rsvp";
+import { getQuestionsMap } from "@/lib/questions";
 
 type Phase = "checking" | "locked" | "loading" | "loaded" | "error";
 
 export function GroupReveal() {
   const [phase, setPhase] = useState<Phase>("checking");
   const [rsvps, setRsvps] = useState<RsvpRecord[]>([]);
+  const [questionTextById, setQuestionTextById] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     let cancelled = false;
@@ -24,9 +26,13 @@ export function GroupReveal() {
       }
       if (!cancelled) setPhase("loading");
       try {
-        const records = await getRevealedRsvps();
+        const [records, questionsMap] = await Promise.all([
+          getRevealedRsvps(),
+          getQuestionsMap(),
+        ]);
         if (!cancelled) {
           setRsvps(records);
+          setQuestionTextById(questionsMap);
           setPhase("loaded");
         }
       } catch {
@@ -52,7 +58,7 @@ export function GroupReveal() {
       <div className="mx-auto max-w-lg">
         <h2 className="font-stencil text-2xl text-amber-bright">Revelación del expediente</h2>
         <p className="mt-2 text-sm text-muted">
-          El día del caso, aquí aparece quién interroga a quién.
+          El día del caso, aquí aparece quién declaró qué.
         </p>
 
         <div className="case-card mt-8 px-6 py-10 text-center">
@@ -81,7 +87,9 @@ export function GroupReveal() {
                       {r.name}
                     </p>
                     <p className="mt-1 text-sm text-foreground">
-                      {r.questionText ?? "Sin pregunta asignada"}
+                      {(r.questionId && questionTextById.get(r.questionId)) ??
+                        r.questionText ??
+                        "Sin pregunta asignada"}
                     </p>
                   </div>
                 </li>

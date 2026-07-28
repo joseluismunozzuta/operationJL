@@ -5,6 +5,17 @@ import { onAuthStateChanged, type User } from "firebase/auth";
 import { auth, signInWithGoogle, signOutUser } from "@/lib/firebase";
 import { ADMIN_EMAIL } from "@/lib/event-config";
 import { getMyRsvp, submitRsvp, type Confirmation, type RsvpRecord } from "@/lib/rsvp";
+import { getQuestionText } from "@/lib/questions";
+
+// Resuelve el rsvp con el texto de la pregunta en vivo (por id) en vez de la
+// copia congelada, para que una corrección posterior en el banco se refleje
+// también aquí. Si la pregunta ya no existe, cae de vuelta a la copia.
+async function resolveMyRsvp(uid: string): Promise<RsvpRecord | null> {
+  const record = await getMyRsvp(uid);
+  if (!record?.questionId) return record;
+  const liveText = await getQuestionText(record.questionId);
+  return liveText ? { ...record, questionText: liveText } : record;
+}
 
 const OPTIONS: { value: Confirmation; label: string }[] = [
   { value: "si", label: "Sí, allí estaré" },
@@ -36,7 +47,7 @@ export function RsvpForm() {
         if (!cancelled) setMyRsvp(null);
         return;
       }
-      const record = await getMyRsvp(guestUser.uid);
+      const record = await resolveMyRsvp(guestUser.uid);
       if (cancelled) return;
       setMyRsvp(record);
       setConfirmation(record?.confirmation ?? null);
@@ -69,7 +80,7 @@ export function RsvpForm() {
     try {
       const name = guestUser.displayName || guestUser.email || "Testigo";
       await submitRsvp(name, confirmation);
-      setMyRsvp(await getMyRsvp(guestUser.uid));
+      setMyRsvp(await resolveMyRsvp(guestUser.uid));
     } catch {
       setError("No se pudo registrar tu declaración. Intenta de nuevo.");
     } finally {
@@ -174,13 +185,20 @@ export function RsvpForm() {
 
         {myRsvp?.confirmation === "si" && myRsvp.questionText && (
           <div className="mt-6 border-t border-paper-border pt-6 text-center">
+            {!envelopeOpen && (
+              <p className="mb-4 text-sm text-foreground">
+                Tienes una pregunta secreta para el interrogatorio grupal.
+                <br />
+                <span className="text-amber-bright">Toca el sobre para abrirlo 👇</span>
+              </p>
+            )}
             <button
               type="button"
               onClick={() => setEnvelopeOpen(true)}
               className={`group relative mx-auto flex h-28 w-44 items-center justify-center border-2 border-dashed border-amber transition-opacity ${
                 envelopeOpen ? "pointer-events-none opacity-0" : "opacity-100"
               }`}
-              aria-label="Abrir sobre sellado con tu pregunta asignada"
+              aria-label="Toca para abrir el sobre sellado y revelar tu pregunta"
             >
               <span className="stamp text-red-bright text-xs">Sellado</span>
             </button>

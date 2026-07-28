@@ -1,6 +1,6 @@
-// CASO N.º 001 — datos del expediente. Edita aquí fecha, lugar y el link de Kahoot.
+// CASO N.º 050899 — datos del expediente. Edita aquí fecha, lugar y el link de Kahoot.
 
-export const CASE_NUMBER = "001";
+export const CASE_NUMBER = "050899";
 export const HONOREE_NAME = "JL";
 
 // Hora local de Lima (America/Lima, UTC-5, sin horario de verano).

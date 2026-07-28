@@ -27,7 +27,7 @@ export function Hero() {
       </div>
 
       <a
-        href="#hechos"
+        href="#citacion"
         className="group inline-flex items-center gap-2 rounded-sm border border-amber px-6 py-3 font-mono text-sm uppercase tracking-widest text-amber-bright transition-colors hover:bg-amber hover:text-background"
       >
         Acceder al expediente

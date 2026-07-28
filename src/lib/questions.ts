@@ -3,7 +3,10 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
+  getDocs,
   onSnapshot,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "./firebase";
 
@@ -46,8 +49,28 @@ export async function addQuestion(text: string) {
   });
 }
 
+export async function updateQuestionText(id: string, text: string) {
+  await updateDoc(doc(db, "questions", id), { text: text.trim() });
+}
+
 export async function deleteQuestion(id: string) {
   await deleteDoc(doc(db, "questions", id));
+}
+
+// Lectura en vivo para resolver el texto actual de una pregunta por id — así
+// una corrección posterior (vía updateQuestionText) se refleja también en
+// declaraciones ya asignadas, en vez de depender de la copia congelada que
+// se guardó en el rsvp al momento de asignar.
+export async function getQuestionText(id: string): Promise<string | null> {
+  const snap = await getDoc(doc(db, "questions", id));
+  return snap.exists() ? ((snap.data().text as string) ?? null) : null;
+}
+
+export async function getQuestionsMap(): Promise<Map<string, string>> {
+  const snap = await getDocs(collection(db, "questions"));
+  const map = new Map<string, string>();
+  snap.docs.forEach((d) => map.set(d.id, (d.data().text as string) ?? ""));
+  return map;
 }
 
 // Banco de 30 preguntas para el interrogatorio grupal. IDs fijos para que el
