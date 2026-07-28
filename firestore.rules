@@ -76,6 +76,65 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // ---------------------------------------------------------------------
+    // Interrogatorio en vivo (trivia tipo Kahoot)
+    // ---------------------------------------------------------------------
+
+    function gameState() {
+      return get(/databases/$(database)/documents/triviaGame/live).data;
+    }
+
+    // Estado del juego: todos necesitan leerlo (pregunta actual, temporizador,
+    // resultado). Solo el admin lo escribe.
+    match /triviaGame/live {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Enunciado y alternativas. Lectura pública PERO limitada a la pregunta
+    // que está activa: así nadie puede adelantarse y leer el resto del banco.
+    match /triviaQuestions/{questionId} {
+      allow read: if isAdmin() || gameState().currentQuestionId == questionId;
+      allow write: if isAdmin();
+    }
+
+    // La respuesta correcta vive aquí, aislada: NUNCA es legible por un
+    // jugador. El admin la lee solo al momento de calificar.
+    match /triviaKeys/{questionId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Una respuesta por pregunta y por persona, inmutable:
+    // - el id del documento debe ser {preguntaActual}_{uid}
+    // - solo se permite create (nunca update), así no se puede cambiar la
+    //   respuesta después de ver el resultado
+    // - solo mientras la pregunta esté abierta
+    match /triviaResponses/{responseId} {
+      allow read: if isAdmin() || (request.auth != null && resource.data.uid == request.auth.uid);
+
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && responseId == request.resource.data.questionId + '_' + request.auth.uid
+        && gameState().status == 'question'
+        && gameState().currentQuestionId == request.resource.data.questionId
+        && request.resource.data.optionIndex is int
+        && request.resource.data.optionIndex >= 0
+        && request.resource.data.optionIndex < gameState().optionCount
+        && request.resource.data.keys().hasOnly(
+             ['uid', 'name', 'photoURL', 'questionId', 'optionIndex', 'answeredAt']
+           );
+
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+
+    // Marcador: lectura pública (el podio se ve en la TV y en cada celular),
+    // escritura solo del admin — los puntos los calcula su panel.
+    match /triviaScores/{uid} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Contador del turno de declaración, asignado al escanear el QR de la
     // puerta (counters/checkin). Cualquier testigo autenticado puede tomar el
     // siguiente número, pero solo puede incrementarlo de uno en uno — no

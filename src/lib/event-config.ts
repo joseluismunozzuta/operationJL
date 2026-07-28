@@ -12,7 +12,4 @@ export const EVENT_MAPS_URL = `https://www.google.com/maps/search/?api=1&query=$
   EVENT_ADDRESS
 )}`;
 
-// Placeholder — reemplaza con el link/PIN real el día del evento.
-export const KAHOOT_URL = "";
-
 export const ADMIN_EMAIL = "joseluismunozzuta@gmail.com";

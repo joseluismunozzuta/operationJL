@@ -10,6 +10,11 @@
   --amber-bright: #f5b942;
   --red: #a92420;
   --red-bright: #dc352f;
+  /* Alternativas del interrogatorio: 4 colores distinguibles sobre fondo oscuro */
+  --opt-a: #c2352f;
+  --opt-b: #2f6bb5;
+  --opt-c: #d99a2b;
+  --opt-d: #3d8a55;
 }
 
 @theme inline {
@@ -22,6 +27,10 @@
   --color-amber-bright: var(--amber-bright);
   --color-red: var(--red);
   --color-red-bright: var(--red-bright);
+  --color-opt-a: var(--opt-a);
+  --color-opt-b: var(--opt-b);
+  --color-opt-c: var(--opt-c);
+  --color-opt-d: var(--opt-d);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-stencil: var(--font-special-elite);
