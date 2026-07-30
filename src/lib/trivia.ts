@@ -39,7 +39,7 @@ export type TriviaQuestion = {
   id: string;
   order: number;
   text: string;
-  imageUrl: string | null;
+  imageUrls: string[];
   options: string[];
   timeLimitSeconds: number;
 };
@@ -96,11 +96,16 @@ function toGameState(data: Record<string, unknown> | undefined): GameState {
 }
 
 function toQuestion(id: string, data: Record<string, unknown>): TriviaQuestion {
+  // Docs viejos guardaban una sola `imageUrl`; los nuevos, la lista
+  // `imageUrls`. Se aceptan ambos para no exigir recargar el banco.
+  const legacySingle = (data.imageUrl as string | null) ?? null;
+  const imageUrls =
+    (data.imageUrls as string[] | undefined) ?? (legacySingle ? [legacySingle] : []);
   return {
     id,
     order: (data.order as number) ?? 0,
     text: (data.text as string) ?? "",
-    imageUrl: (data.imageUrl as string | null) ?? null,
+    imageUrls,
     options: (data.options as string[]) ?? [],
     timeLimitSeconds: (data.timeLimitSeconds as number) ?? 20,
   };
@@ -220,7 +225,7 @@ export async function seedTrivia(): Promise<{ seeded: number; alreadyExisted: nu
     batch.set(doc(db, "triviaQuestions", q.id), {
       order: index,
       text: q.text,
-      imageUrl: q.imageUrl,
+      imageUrls: q.imageUrls,
       options: q.options,
       timeLimitSeconds: q.timeLimitSeconds,
     });

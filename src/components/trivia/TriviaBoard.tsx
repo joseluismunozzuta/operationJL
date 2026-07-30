@@ -1,10 +1,53 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/Avatar";
 import { optionStyle } from "@/components/trivia/options";
 import { useQuestionTimer } from "@/components/trivia/useQuestionTimer";
 import { getQuestion, type GameState, type TriviaQuestion, type TriviaScore } from "@/lib/trivia";
+
+// Carousel de evidencia fotográfica de la pregunta (daisyUI): avanza solo
+// cada 1.5 s y al llegar a la última vuelve a la primera (loop infinito).
+// Con una sola imagen no hay nada que rotar; sin imágenes no se renderiza
+// (el padre lo omite).
+function QuestionCarousel({ urls }: { urls: string[] }) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const indexRef = useRef(0);
+
+  useEffect(() => {
+    indexRef.current = 0;
+    trackRef.current?.scrollTo({ left: 0, behavior: "auto" });
+    if (urls.length <= 1) return;
+
+    const id = setInterval(() => {
+      const track = trackRef.current;
+      if (!track) return;
+      indexRef.current = (indexRef.current + 1) % urls.length;
+      track.scrollTo({
+        left: indexRef.current * track.clientWidth,
+        // El salto de vuelta al inicio va sin animación: un smooth-scroll
+        // rebobinando todas las diapositivas se ve mareado en la TV.
+        behavior: indexRef.current === 0 ? "auto" : "smooth",
+      });
+    }, 1500);
+
+    return () => clearInterval(id);
+  }, [urls]);
+
+  return (
+    <div
+      ref={trackRef}
+      className="carousel mx-auto h-108 w-full max-w-2xl rounded-2xl shadow-xl shadow-gray-800"
+    >
+      {urls.map((src, i) => (
+        <div key={i} className="carousel-item w-full justify-center bg-paper">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={src} alt="" className="h-108 w-full object-contain" />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 // Tablero del interrogatorio para la TV: la pregunta y las alternativas se
 // leen acá, mientras los celulares solo muestran los botones de color.
@@ -29,6 +72,7 @@ export function TriviaBoard({ game, scores }: { game: GameState; scores: TriviaS
 
   if (game.status === "finished") {
     const [first, second, third] = scores;
+
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-10 py-12">
         <span className="stamp text-amber-bright text-lg">Caso cerrado</span>
@@ -116,32 +160,24 @@ export function TriviaBoard({ game, scores }: { game: GameState; scores: TriviaS
   if (game.status === "question" && question) {
     const timeUp = remaining !== null && remaining <= 0;
     return (
-      <div className="flex flex-1 flex-col gap-8 py-8">
+      <div className="flex flex-1 flex-col gap-5 py-8">
         <div className="flex items-center justify-between gap-6">
           <p className="font-mono text-sm uppercase tracking-[0.3em] text-muted">
             Pregunta {game.currentIndex + 1} / {game.totalQuestions}
           </p>
           <span
-            className={`font-stencil text-7xl leading-none ${
-              timeUp ? "text-red-bright" : "text-amber-bright"
-            }`}
+            className={`font-stencil text-7xl leading-none ${timeUp ? "text-red-bright" : "text-amber-bright"
+              }`}
           >
             {remaining ?? "--"}
           </span>
         </div>
 
-        <h2 className="text-center text-4xl leading-tight text-foreground lg:text-5xl">
+        <h2 className="text-center font-semibold text-4xl leading-tight text-foreground lg:text-5xl">
           {question.text}
         </h2>
 
-        {question.imageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={question.imageUrl}
-            alt=""
-            className="mx-auto max-h-64 w-auto object-contain"
-          />
-        )}
+        {question.imageUrls.length > 0 && <QuestionCarousel urls={question.imageUrls} />}
 
         <div className="mt-auto grid grid-cols-2 gap-4">
           {question.options.map((opt, i) => {
@@ -152,7 +188,7 @@ export function TriviaBoard({ game, scores }: { game: GameState; scores: TriviaS
                 className={`${style.bg} flex items-center gap-4 px-6 py-6 text-background`}
               >
                 <span className="text-4xl">{style.shape}</span>
-                <span className="text-2xl leading-tight">{opt}</span>
+                <span className="text-3xl leading-tight text-white font-bold">{opt}</span>
               </div>
             );
           })}
