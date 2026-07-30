@@ -1,5 +1,6 @@
 import { doc, getDoc, runTransaction, serverTimestamp, setDoc, Timestamp } from "firebase/firestore";
 import { auth, db } from "./firebase";
+import { ADMIN_EMAIL } from "./event-config";
 import { assignRandomQuestion, type Confirmation } from "./rsvp";
 
 export type CheckInResult = {
@@ -34,6 +35,10 @@ async function claimNextTurn(): Promise<number> {
 export async function checkIn(): Promise<CheckInResult> {
   const user = auth.currentUser;
   if (!user) throw new Error("not-authenticated");
+  // JL es el sujeto del expediente, no un testigo: nunca se ficha ni ocupa un
+  // turno de declaración. Se corta acá y no solo en la UI, para que el guard
+  // no dependa de la pantalla.
+  if (user.email === ADMIN_EMAIL) throw new Error("admin-not-a-witness");
 
   const name = user.displayName || user.email || "Testigo";
   const rsvpRef = doc(db, "rsvps", user.uid);

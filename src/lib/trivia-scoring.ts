@@ -1,10 +1,10 @@
 import {
+  arrayUnion,
   collection,
   doc,
   getDoc,
   getDocs,
   query,
-  setDoc,
   Timestamp,
   where,
   writeBatch,
@@ -44,22 +44,34 @@ function pointsFor(
   return base + streakBonus;
 }
 
-// Corre en el navegador del admin: lee la clave correcta (que los jugadores no
-// pueden leer), califica todas las respuestas y publica el resultado.
+// Corre en el navegador del admin (laptop o celular): lee la clave correcta
+// —que los jugadores no pueden leer—, califica todas las respuestas y publica
+// el resultado.
+//
+// Es idempotente: si se corta la conexión y se reintenta, no vuelve a sumar
+// puntos. Lo garantizan dos cosas: la lista `gradedQuestionIds` en el doc del
+// juego, y que puntajes + estado se escriban en un único batch atómico (o pasa
+// todo, o no pasa nada — nunca queda a medias).
 export async function gradeQuestion(
   questionId: string,
   timeLimitSeconds: number,
   optionCount: number,
   startedAt: Timestamp
 ): Promise<GradeSummary> {
+  const gameRef = doc(db, "triviaGame", "live");
   const keySnap = await getDoc(doc(db, "triviaKeys", questionId));
   if (!keySnap.exists()) throw new Error("key-not-found");
   const correctIndex = keySnap.data().correctIndex as number;
 
-  const [responsesSnap, scoresSnap] = await Promise.all([
+  const [responsesSnap, scoresSnap, gameSnap] = await Promise.all([
     getDocs(query(collection(db, "triviaResponses"), where("questionId", "==", questionId))),
     getDocs(collection(db, "triviaScores")),
+    getDoc(gameRef),
   ]);
+
+  const alreadyGraded = ((gameSnap.data()?.gradedQuestionIds as string[]) ?? []).includes(
+    questionId
+  );
 
   const responses = responsesSnap.docs.map((d) => toResponse(d.id, d.data()));
   const correctOnes = responses.filter((r) => r.optionIndex === correctIndex);
@@ -82,41 +94,51 @@ export async function gradeQuestion(
 
   const batch = writeBatch(db);
 
-  for (const response of responses) {
-    const prev = prevScores.get(response.uid);
-    const wasCorrect = response.optionIndex === correctIndex;
-    const newStreak = wasCorrect ? (prev?.streak ?? 0) + 1 : 0;
+  // Si ya se calificó (reintento tras un corte), se republica el resultado sin
+  // volver a sumar puntos.
+  if (!alreadyGraded) {
+    for (const response of responses) {
+      const prev = prevScores.get(response.uid);
+      const wasCorrect = response.optionIndex === correctIndex;
+      const newStreak = wasCorrect ? (prev?.streak ?? 0) + 1 : 0;
 
-    let gained = 0;
-    if (wasCorrect) {
-      gained = pointsFor(response, startedAt, timeLimitSeconds, newStreak);
-      if (isSolo) gained *= 2;
+      let gained = 0;
+      if (wasCorrect) {
+        gained = pointsFor(response, startedAt, timeLimitSeconds, newStreak);
+        if (isSolo) gained *= 2;
+      }
+
+      batch.set(doc(db, "triviaScores", response.uid), {
+        name: response.name,
+        photoURL: response.photoURL,
+        totalPoints: (prev?.totalPoints ?? 0) + gained,
+        streak: newStreak,
+        correctCount: (prev?.correctCount ?? 0) + (wasCorrect ? 1 : 0),
+      });
     }
 
-    batch.set(doc(db, "triviaScores", response.uid), {
-      name: response.name,
-      photoURL: response.photoURL,
-      totalPoints: (prev?.totalPoints ?? 0) + gained,
-      streak: newStreak,
-      correctCount: (prev?.correctCount ?? 0) + (wasCorrect ? 1 : 0),
-    });
+    // Quien ya jugaba antes y no respondió esta pregunta pierde la racha.
+    const respondedUids = new Set(responses.map((r) => r.uid));
+    for (const [uid, prev] of prevScores) {
+      if (respondedUids.has(uid) || prev.streak === 0) continue;
+      batch.set(doc(db, "triviaScores", uid), { streak: 0 }, { merge: true });
+    }
   }
 
-  // Quien ya jugaba antes y no respondió esta pregunta pierde la racha.
-  const respondedUids = new Set(responses.map((r) => r.uid));
-  for (const [uid, prev] of prevScores) {
-    if (respondedUids.has(uid) || prev.streak === 0) continue;
-    batch.set(doc(db, "triviaScores", uid), { streak: 0 }, { merge: true });
-  }
-
-  await batch.commit();
-
+  // Puntajes y estado del juego viajan en el MISMO batch: si el celular pierde
+  // señal a mitad, no queda un estado intermedio con puntos ya sumados.
   const lastResult: LastResult = { questionId, correctIndex, counts };
-  await setDoc(
-    doc(db, "triviaGame", "live"),
-    { status: "results" satisfies GameStatus, lastResult },
+  batch.set(
+    gameRef,
+    {
+      status: "results" satisfies GameStatus,
+      lastResult,
+      gradedQuestionIds: arrayUnion(questionId),
+    },
     { merge: true }
   );
+
+  await batch.commit();
 
   return {
     correctIndex,

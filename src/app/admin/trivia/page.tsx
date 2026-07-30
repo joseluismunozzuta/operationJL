@@ -6,6 +6,7 @@ import { onAuthStateChanged, type User } from "firebase/auth";
 import { auth, signInWithGoogle } from "@/lib/firebase";
 import { ADMIN_EMAIL } from "@/lib/event-config";
 import {
+  deleteTriviaBank,
   getAllQuestions,
   IDLE_GAME,
   openQuestion,
@@ -185,6 +186,12 @@ export default function AdminTriviaPage() {
 
         {status && <p className="case-card px-4 py-3 text-sm text-amber-bright">{status}</p>}
 
+        <p className="border border-paper-border bg-paper/50 px-4 py-3 text-xs text-muted">
+          Los puntajes se calculan en <strong className="text-foreground">este</strong>{" "}
+          dispositivo. Mantén esta pestaña abierta durante el juego; si se corta la señal al
+          calificar, vuelve a tocar &ldquo;Cerrar y calificar&rdquo; — no se duplican puntos.
+        </p>
+
         {questions.length === 0 && (
           <div className="case-card px-5 py-6 text-center">
             <p className="text-sm text-muted">
@@ -321,24 +328,52 @@ export default function AdminTriviaPage() {
         )}
 
         {/* Zona de riesgo */}
-        <div className="case-card px-5 py-4">
-          <p className="text-xs text-muted">
-            Reiniciar borra todas las respuestas y puntajes, pero conserva el banco de
-            preguntas. Úsalo si haces una partida de prueba antes del evento.
-          </p>
-          <button
-            type="button"
-            onClick={() =>
-              run("reiniciar", async () => {
-                await resetGame();
-                setStatus("Juego reiniciado: respuestas y puntajes borrados.");
-              })
-            }
-            disabled={busy}
-            className="mt-3 border border-paper-border px-4 py-2 font-mono text-xs uppercase tracking-widest text-muted transition-colors hover:border-red-bright hover:text-red-bright disabled:opacity-40"
-          >
-            Reiniciar juego
-          </button>
+        <div className="case-card space-y-4 px-5 py-4">
+          <div>
+            <p className="text-xs text-muted">
+              Reiniciar borra respuestas y puntajes, pero conserva el banco. Úsalo entre la
+              partida de prueba y la real.
+            </p>
+            <button
+              type="button"
+              onClick={() =>
+                run("reiniciar", async () => {
+                  await resetGame();
+                  setStatus("Juego reiniciado: respuestas y puntajes borrados.");
+                })
+              }
+              disabled={busy}
+              className="mt-3 border border-paper-border px-4 py-2 font-mono text-xs uppercase tracking-widest text-muted transition-colors hover:border-red-bright hover:text-red-bright disabled:opacity-40"
+            >
+              Reiniciar juego
+            </button>
+          </div>
+
+          <div className="border-t border-paper-border pt-4">
+            <p className="text-xs text-muted">
+              Recargar el banco borra las preguntas actuales y vuelve a sembrarlas desde el
+              código. Úsalo si editaste las preguntas en{" "}
+              <span className="text-foreground">trivia-bank.ts</span>.
+            </p>
+            <button
+              type="button"
+              onClick={() =>
+                run("recargar el banco", async () => {
+                  await deleteTriviaBank();
+                  const res = await seedTrivia();
+                  // Deja todo en cero: respuestas viejas de una prueba anterior
+                  // apuntarían a preguntas que ya no son las mismas.
+                  await resetGame();
+                  setQuestions(await getAllQuestions());
+                  setStatus(`Banco recargado: ${res.seeded} preguntas, marcador en cero.`);
+                })
+              }
+              disabled={busy}
+              className="mt-3 border border-paper-border px-4 py-2 font-mono text-xs uppercase tracking-widest text-muted transition-colors hover:border-red-bright hover:text-red-bright disabled:opacity-40"
+            >
+              Recargar banco desde el código
+            </button>
+          </div>
         </div>
       </div>
     </main>

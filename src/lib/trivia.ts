@@ -76,6 +76,11 @@ export const IDLE_GAME: GameState = {
   lastResult: null,
 };
 
+// Estado inicial que se escribe en Firestore. `gradedQuestionIds` lleva el
+// registro de qué preguntas ya se calificaron, para que un reintento tras un
+// corte de señal no vuelva a sumar puntos (ver trivia-scoring.ts).
+const FRESH_GAME_DOC = { ...IDLE_GAME, gradedQuestionIds: [] as string[] };
+
 function toGameState(data: Record<string, unknown> | undefined): GameState {
   if (!data) return IDLE_GAME;
   return {
@@ -222,23 +227,29 @@ export async function seedTrivia(): Promise<{ seeded: number; alreadyExisted: nu
     // La clave correcta vive aparte: los jugadores nunca pueden leerla.
     batch.set(doc(db, "triviaKeys", q.id), { correctIndex: q.correctIndex });
   });
-  batch.set(GAME_REF(), { ...IDLE_GAME, totalQuestions: TRIVIA_BANK.length });
+  batch.set(GAME_REF(), { ...FRESH_GAME_DOC, totalQuestions: TRIVIA_BANK.length });
   await batch.commit();
 
   return { seeded: TRIVIA_BANK.length, alreadyExisted: 0 };
 }
 
 export async function openQuestion(question: TriviaQuestion, index: number, total: number) {
-  await setDoc(GAME_REF(), {
-    status: "question" satisfies GameStatus,
-    currentQuestionId: question.id,
-    currentIndex: index,
-    totalQuestions: total,
-    questionStartedAt: serverTimestamp(),
-    deadlineSeconds: question.timeLimitSeconds,
-    optionCount: question.options.length,
-    lastResult: null,
-  });
+  // merge: true a propósito — sin él se borraría gradedQuestionIds y se
+  // perdería la protección contra doble conteo de puntos.
+  await setDoc(
+    GAME_REF(),
+    {
+      status: "question" satisfies GameStatus,
+      currentQuestionId: question.id,
+      currentIndex: index,
+      totalQuestions: total,
+      questionStartedAt: serverTimestamp(),
+      deadlineSeconds: question.timeLimitSeconds,
+      optionCount: question.options.length,
+      lastResult: null,
+    },
+    { merge: true }
+  );
 }
 
 export async function setGameStatus(status: GameStatus) {
@@ -255,7 +266,9 @@ export async function resetGame() {
   const batch = writeBatch(db);
   responses.docs.forEach((d) => batch.delete(d.ref));
   scores.docs.forEach((d) => batch.delete(d.ref));
-  batch.set(GAME_REF(), { ...IDLE_GAME, totalQuestions: questions.size });
+  // setDoc sin merge: reemplaza el doc entero, así gradedQuestionIds vuelve a
+  // vaciarse y una partida de prueba no bloquea la calificación de la real.
+  batch.set(GAME_REF(), { ...FRESH_GAME_DOC, totalQuestions: questions.size });
   await batch.commit();
 }
 

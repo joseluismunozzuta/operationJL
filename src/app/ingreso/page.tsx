@@ -5,7 +5,7 @@ import Link from "next/link";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { auth, signInWithGoogle } from "@/lib/firebase";
 import { checkIn, type CheckInResult } from "@/lib/checkin";
-import { CASE_NUMBER } from "@/lib/event-config";
+import { ADMIN_EMAIL, CASE_NUMBER } from "@/lib/event-config";
 
 type Status = "auth" | "checking" | "done" | "error";
 
@@ -19,11 +19,13 @@ export default function IngresoPage() {
   useEffect(() => onAuthStateChanged(auth, setUser), []);
 
   const guestUser = user && !user.isAnonymous ? user : user === undefined ? undefined : null;
+  const isAdmin = guestUser?.email === ADMIN_EMAIL;
 
   // Apenas hay sesión, se ficha automáticamente: el invitado no debería tener
-  // que tocar nada más después de escanear.
+  // que tocar nada más después de escanear. JL queda excluido: es el sujeto
+  // del expediente, no un testigo.
   useEffect(() => {
-    if (!guestUser) return;
+    if (!guestUser || isAdmin) return;
     let cancelled = false;
     const run = async () => {
       if (!cancelled) setStatus("checking");
@@ -45,7 +47,7 @@ export default function IngresoPage() {
       cancelled = true;
       clearTimeout(timeoutId);
     };
-  }, [guestUser]);
+  }, [guestUser, isAdmin]);
 
   async function handleSignIn() {
     setError("");
@@ -88,15 +90,40 @@ export default function IngresoPage() {
           </div>
         )}
 
-        {guestUser && status === "checking" && (
+        {isAdmin && (
+          <div className="case-card mt-8 px-6 py-10">
+            <span className="stamp text-amber-bright text-xs">Sujeto del expediente</span>
+            <p className="mt-8 text-lg text-foreground">Eres JL. Esta puerta no es para ti.</p>
+            <p className="mt-3 text-sm text-muted">
+              El registro de ingreso es solo para los testigos que llegan a declarar. Tú ya
+              estás en el caso.
+            </p>
+            <div className="mt-6 flex flex-col gap-2">
+              <Link
+                href="/proyeccion"
+                className="border border-amber px-5 py-2.5 font-mono text-xs uppercase tracking-widest text-amber-bright transition-colors hover:bg-amber hover:text-background"
+              >
+                Ver quiénes han llegado →
+              </Link>
+              <Link
+                href="/admin"
+                className="border border-paper-border px-5 py-2.5 font-mono text-xs uppercase tracking-widest text-muted transition-colors hover:border-amber hover:text-amber-bright"
+              >
+                Panel del investigador
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {guestUser && !isAdmin && status === "checking" && (
           <p className="mt-8 text-sm text-muted">Sellando tu ingreso...</p>
         )}
 
-        {guestUser && status === "error" && (
+        {guestUser && !isAdmin && status === "error" && (
           <p className="mt-8 text-sm text-red-bright">{error}</p>
         )}
 
-        {guestUser && status === "done" && result && (
+        {guestUser && !isAdmin && status === "done" && result && (
           <div className="case-card mt-8 px-6 py-10">
             <span className="stamp text-amber-bright text-xs">
               {result.alreadyCheckedIn ? "Ya registrado" : "Presente"}
