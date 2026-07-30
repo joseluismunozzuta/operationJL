@@ -348,17 +348,33 @@ export default function AdminPage() {
           {seedStatus && <p className="mt-2 text-xs text-muted">{seedStatus}</p>}
         </div>
 
-        <div className="case-card px-5 py-4">
-          <p className="text-sm text-muted">
-            El día del evento: abre la proyección en la TV y apunta el QR de la puerta a la
-            página de ingreso.
+        <div className="case-card px-5 py-5">
+          <h2 className="font-stencil text-lg text-amber-bright">El día del evento</h2>
+          <p className="mt-1 text-sm text-muted">
+            Proyecta la TV, apunta el QR de la puerta a la página de ingreso, y dirige el
+            interrogatorio desde aquí (funciona igual en laptop o celular).
           </p>
+
+          <Link
+            href="/admin/trivia"
+            className="mt-4 flex items-center justify-between gap-3 border border-amber bg-amber px-5 py-4 text-background transition-opacity hover:opacity-90"
+          >
+            <span>
+              <span className="block font-mono text-xs uppercase tracking-widest opacity-80">
+                Control del juego
+              </span>
+              <span className="mt-0.5 block text-lg">Dirigir el interrogatorio</span>
+            </span>
+            <span className="text-2xl">→</span>
+          </Link>
+
           <div className="mt-3 flex flex-wrap gap-2">
             <Link
               href="/proyeccion"
+              target="_blank"
               className="border border-amber px-4 py-2 font-mono text-xs uppercase tracking-widest text-amber-bright transition-colors hover:bg-amber hover:text-background"
             >
-              Abrir proyección →
+              Abrir proyección (TV) ↗
             </Link>
             <Link
               href="/ingreso"
@@ -369,6 +385,55 @@ export default function AdminPage() {
           </div>
         </div>
 
+                <div className="case-card overflow-x-auto">
+          <table className="w-full min-w-[560px] text-left text-sm">
+            <thead>
+              <tr className="border-b border-paper-border text-xs uppercase tracking-widest text-muted">
+                <th className="px-4 py-3">Turno</th>
+                <th className="px-4 py-3">Nombre</th>
+                <th className="px-4 py-3">Confirmación</th>
+                <th className="px-4 py-3">Pregunta asignada</th>
+                <th className="px-4 py-3">Fecha</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-paper-border">
+              {rsvps.map((r) => (
+                <tr key={r.id}>
+                  <td className="px-4 py-3">
+                    {r.turn !== null ? (
+                      <span className="font-mono text-amber-bright">{r.turn}</span>
+                    ) : (
+                      <span className="text-muted">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-foreground">
+                    <div className="flex items-center gap-2">
+                      <Avatar photoURL={r.photoURL} name={r.name} size={28} />
+                      {r.name}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-foreground">
+                    {CONFIRMATION_LABEL[r.confirmation]}
+                  </td>
+                  <td className="px-4 py-3 text-muted">
+                    {(r.questionId && questionTextById.get(r.questionId)) ?? r.questionText ?? "—"}
+                  </td>
+                  <td className="px-4 py-3 text-muted">
+                    {r.createdAt ? r.createdAt.toDate().toLocaleString("es-PE") : "—"}
+                  </td>
+                </tr>
+              ))}
+              {rsvps.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-4 py-6 text-center text-muted">
+                    Aún no hay declaraciones registradas.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        
         <div className="space-y-4">
           <div>
             <h2 className="font-stencil text-xl text-amber-bright">Banco de preguntas</h2>
@@ -459,55 +524,6 @@ export default function AdminPage() {
               </p>
             )}
           </div>
-        </div>
-
-        <div className="case-card overflow-x-auto">
-          <table className="w-full min-w-[560px] text-left text-sm">
-            <thead>
-              <tr className="border-b border-paper-border text-xs uppercase tracking-widest text-muted">
-                <th className="px-4 py-3">Turno</th>
-                <th className="px-4 py-3">Nombre</th>
-                <th className="px-4 py-3">Confirmación</th>
-                <th className="px-4 py-3">Pregunta asignada</th>
-                <th className="px-4 py-3">Fecha</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-paper-border">
-              {rsvps.map((r) => (
-                <tr key={r.id}>
-                  <td className="px-4 py-3">
-                    {r.turn !== null ? (
-                      <span className="font-mono text-amber-bright">{r.turn}</span>
-                    ) : (
-                      <span className="text-muted">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-foreground">
-                    <div className="flex items-center gap-2">
-                      <Avatar photoURL={r.photoURL} name={r.name} size={28} />
-                      {r.name}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-foreground">
-                    {CONFIRMATION_LABEL[r.confirmation]}
-                  </td>
-                  <td className="px-4 py-3 text-muted">
-                    {(r.questionId && questionTextById.get(r.questionId)) ?? r.questionText ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-muted">
-                    {r.createdAt ? r.createdAt.toDate().toLocaleString("es-PE") : "—"}
-                  </td>
-                </tr>
-              ))}
-              {rsvps.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-muted">
-                    Aún no hay declaraciones registradas.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
         </div>
 
         <div className="space-y-4">
@@ -677,7 +693,7 @@ export default function AdminPage() {
                       </div>
                     )}
                   </div>
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 overflow-hidden">
                     <p className="truncate text-sm text-foreground">{item.title}</p>
                     {item.description && (
                       <p className="truncate text-xs text-muted">{item.description}</p>
