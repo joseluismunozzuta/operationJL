@@ -2,6 +2,23 @@ import { doc, getDoc, runTransaction, serverTimestamp, setDoc, Timestamp } from 
 import { auth, db } from "./firebase";
 import { ADMIN_EMAIL } from "./event-config";
 import { assignRandomQuestion, type Confirmation } from "./rsvp";
+import { getQuestionText } from "./questions";
+
+// El texto guardado en el rsvp es una copia del momento de la asignación: si
+// después se corrige la pregunta en el banco, queda desactualizada. Todas las
+// demás pantallas resuelven el texto en vivo por id, así que acá se hace lo
+// mismo para que el invitado no vea algo distinto a lo que ve JL en el panel.
+async function resolveText(
+  questionId: string | null,
+  fallback: string | null
+): Promise<string | null> {
+  if (!questionId) return fallback;
+  try {
+    return (await getQuestionText(questionId)) ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 export type CheckInResult = {
   turn: number;
@@ -59,7 +76,10 @@ export async function checkIn(): Promise<CheckInResult> {
     return {
       turn: existing.turn,
       name: existing.name ?? name,
-      questionText: existing.questionText ?? null,
+      questionText: await resolveText(
+        existing.questionId ?? null,
+        existing.questionText ?? null
+      ),
       alreadyCheckedIn: true,
     };
   }
@@ -87,5 +107,10 @@ export async function checkIn(): Promise<CheckInResult> {
     declaredAt: existing?.declaredAt ?? null,
   });
 
-  return { turn, name, questionText, alreadyCheckedIn: false };
+  return {
+    turn,
+    name,
+    questionText: await resolveText(questionId, questionText),
+    alreadyCheckedIn: false,
+  };
 }
