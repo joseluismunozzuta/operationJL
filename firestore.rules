@@ -60,11 +60,16 @@ service cloud.firestore {
           && request.resource.data.confirmation in ['si', 'no']
           && request.resource.data.keys().hasOnly(
                ['name', 'confirmation', 'uid', 'photoURL', 'questionId', 'questionText',
-                'createdAt', 'turn', 'checkedInAt']
+                'createdAt', 'turn', 'checkedInAt', 'declaredAt']
              );
       }
 
       allow create, update: if isOwnDoc() && isValidRsvp();
+
+      // JL marca desde /proyeccion quién ya declaró. Solo puede tocar ese
+      // campo: no puede alterar el nombre, la pregunta ni el turno de nadie.
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['declaredAt']);
 
       // Lectura: el admin siempre puede verla (panel); un testigo puede leer
       // su propia declaración (para ver/actualizar su estado y su pregunta);
@@ -139,6 +144,13 @@ service cloud.firestore {
     // puerta (counters/checkin). Cualquier testigo autenticado puede tomar el
     // siguiente número, pero solo puede incrementarlo de uno en uno — no
     // reescribirlo a un valor arbitrario ni retroceder.
+    // Interruptor del interrogatorio de testigos: lectura pública (la TV lo
+    // necesita sin sesión), escritura solo del admin.
+    match /counters/interrogation {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /counters/checkin {
       allow read: if request.auth != null;
 

@@ -31,11 +31,7 @@ export const TRIVIA_BANK: TriviaSeed[] = [
       "/img/1_20250806_131308.jpg",
       "/img/1_FB_IMG_1700636865574.jpg",
       "/img/1_screen.jpg",
-      "/img/t01_1.jpg",
-      "/img/t01_2.jpg",
-      "/img/t01_3.jpg",
-      "/img/t01_4.jpg",
-      "/img/t01_5.jpg",
+      "/img/t1_1.png",
     ],
     options: [
       "Lionel Messi",
@@ -50,11 +46,7 @@ export const TRIVIA_BANK: TriviaSeed[] = [
     id: "t02",
     text: "¿Cuál es mi canción favorita de toda la vida?",
     imageUrls: [
-      "/img/t02_1.jpg",
-      "/img/t02_2.jpg",
-      "/img/t02_3.png",
-      "/img/t02_4.jpg",
-      "/img/t02_5.jpg",
+      "/img/t2_1.png",
     ],
     options: [
       "Tornado of Souls — Megadeth",
@@ -70,10 +62,6 @@ export const TRIVIA_BANK: TriviaSeed[] = [
     text: "¿En qué año me gradué de la universidad?",
     imageUrls: [
       "/img/t03_1.jpg",
-      "/img/t03_2.jpg",
-      "/img/t03_3.jpg",
-      "/img/t03_4.jpg",
-      "/img/t03_5.jpg",
     ],
     options: [
       "2020",
@@ -88,9 +76,7 @@ export const TRIVIA_BANK: TriviaSeed[] = [
     id: "t04",
     text: "¿Cuántos idiomas sé hablar, incluido el español?",
     imageUrls: [
-      "/img/t04_1.png",
-      "/img/t04_2.png",
-      "/img/t04_5.jpg",
+      "/img/t4_1.png",
     ],
     options: [
       "2",
@@ -105,10 +91,7 @@ export const TRIVIA_BANK: TriviaSeed[] = [
     id: "t05",
     text: "¿Qué carrera estudié y qué maestría quiero seguir?",
     imageUrls: [
-      "/img/t05_2.jpg",
-      "/img/t05_3.jpg",
-      "/img/t05_4.jpg",
-      "/img/t05_5.jpg",
+      "/img/t5_2.jpg",
     ],
     options: [
       "Ing. Eléctrica — Máster en Ing. Electrónica",
@@ -123,11 +106,7 @@ export const TRIVIA_BANK: TriviaSeed[] = [
     id: "t06",
     text: "¿Cuál es mi Top 3 de golosinas favoritas (de más a menos)?",
     imageUrls: [
-      "/img/t06_1.jpg",
-      "/img/t06_2.jpg",
-      "/img/t06_3.jpg",
-      "/img/t06_4.jpg",
-      "/img/t06_5.jpg",
+      "/img/t6_1.png",
     ],
     options: [
       "Cua Cua, Doña Pepa, Pokeke",
@@ -142,9 +121,6 @@ export const TRIVIA_BANK: TriviaSeed[] = [
     id: "t07",
     text: "¿Cuál es el apodo COMPLETO que tengo desde que soy niño?",
     imageUrls: [
-      "/img/t07_1.jpg",
-      "/img/t07_2.jpg",
-      "/img/t07_3.jpg",
       "/img/t07_4.jpg",
       "/img/t07_5.jpg",
     ],
@@ -161,9 +137,6 @@ export const TRIVIA_BANK: TriviaSeed[] = [
     id: "t08",
     text: "¿A qué hora nací?",
     imageUrls: [
-      "/img/t08_1.jpg",
-      "/img/t08_2.jpg",
-      "/img/t08_3.jpg",
       "/img/t08_4.jpg",
       "/img/t08_5.jpg",
     ],
@@ -180,11 +153,7 @@ export const TRIVIA_BANK: TriviaSeed[] = [
     id: "t09",
     text: "¿Cuál es mi videojuego favorito de todos los tiempos?",
     imageUrls: [
-      "/img/t09_1.jpg",
-      "/img/t09_2.jpg",
-      "/img/t09_3.png",
-      "/img/t09_4.jpg",
-      "/img/t09_5.jpg",
+      "/img/t9_1.png",
     ],
     options: [
       "The Last of Us",
@@ -199,11 +168,7 @@ export const TRIVIA_BANK: TriviaSeed[] = [
     id: "t10",
     text: "¿En qué empresa trabajo actualmente?",
     imageUrls: [
-      "/img/t10_1.jpg",
-      "/img/t10_2.jpg",
       "/img/t10_3.jpg",
-      "/img/t10_4.jpg",
-      "/img/t10_5.jpg",
     ],
     options: [
       "Novatronic",
@@ -221,7 +186,6 @@ export const TRIVIA_BANK: TriviaSeed[] = [
       "/img/t11_1.jpg",
       "/img/t11_2.jpg",
       "/img/t11_3.jpg",
-      "/img/t11_4.png",
       "/img/t11_5.jpg",
     ],
     options: [
@@ -237,10 +201,6 @@ export const TRIVIA_BANK: TriviaSeed[] = [
     id: "t12",
     text: "¿En qué ciudad viví cuando me fui de intercambio estudiantil en el 2019?",
     imageUrls: [
-      "/img/t12_1.jpg",
-      "/img/t12_2.jpg",
-      "/img/t12_3.jpg",
-      "/img/t12_4.jpg",
       "/img/t12_5.jpg",
     ],
     options: [
@@ -256,11 +216,7 @@ export const TRIVIA_BANK: TriviaSeed[] = [
     id: "t13",
     text: "¿A qué animal le tengo mayor temor?",
     imageUrls: [
-      "/img/t13_1.jpg",
-      "/img/t13_2.jpg",
-      "/img/t13_3.jpg",
       "/img/t13_4.jpg",
-      "/img/t13_5.jpg",
     ],
     options: [
       "Araña",
@@ -275,10 +231,7 @@ export const TRIVIA_BANK: TriviaSeed[] = [
     id: "t14",
     text: "¿Qué día es mi aniversario con Mar?",
     imageUrls: [
-      "/img/t14_1.jpg",
-      "/img/t14_2.jpg",
-      "/img/t14_3.jpg",
-      "/img/t14_5.jpg",
+      "/img/t14_1.png",
     ],
     options: [
       "13",
@@ -293,11 +246,7 @@ export const TRIVIA_BANK: TriviaSeed[] = [
     id: "t15",
     text: "¿En qué hospital nací?",
     imageUrls: [
-      "/img/t15_1.jpg",
-      "/img/t15_2.jpg",
-      "/img/t15_3.jpg",
-      "/img/t15_4.jpg",
-      "/img/t15_5.jpg",
+      "/img/t15.avif",
     ],
     options: [
       "Hospital Municipal de Los Olivos",
@@ -312,8 +261,6 @@ export const TRIVIA_BANK: TriviaSeed[] = [
     id: "t16",
     text: "¿En qué año fue mi primer concierto y con qué banda?",
     imageUrls: [
-      "/img/t16_1.jpg",
-      "/img/t16_2.jpg",
       "/img/t16_3.jpg",
       "/img/t16_4.jpg",
       "/img/t16_5.jpg",
@@ -331,11 +278,7 @@ export const TRIVIA_BANK: TriviaSeed[] = [
     id: "t17",
     text: "¿Cuál es mi color favorito?",
     imageUrls: [
-      "/img/t17_1.jpg",
-      "/img/t17_2.jpg",
-      "/img/t17_3.jpg",
-      "/img/t17_4.jpg",
-      "/img/t17_5.jpg",
+      "/img/t17.png",
     ],
     options: [
       "Rojo",
@@ -350,11 +293,7 @@ export const TRIVIA_BANK: TriviaSeed[] = [
     id: "t18",
     text: "¿Cuál es mi comida favorita?",
     imageUrls: [
-      "/img/t18_1.jpg",
-      "/img/t18_2.jpg",
-      "/img/t18_3.jpg",
-      "/img/t18_4.jpg",
-      "/img/t18_5.jpg",
+      "/img/t18_1.png",
     ],
     options: [
       "Pollo a la brasa",
@@ -369,10 +308,8 @@ export const TRIVIA_BANK: TriviaSeed[] = [
     id: "t19",
     text: "¿Cuál es el primer país que conocí en el extranjero?",
     imageUrls: [
-      "/img/t19_2.jpg",
-      "/img/t19_3.jpg",
+      "/img/t19_1.png",
       "/img/t19_4.jpg",
-      "/img/t19_5.jpg",
     ],
     options: [
       "Canadá",
@@ -389,9 +326,6 @@ export const TRIVIA_BANK: TriviaSeed[] = [
     imageUrls: [
       "/img/t20_1.jpg",
       "/img/t20_2.jpg",
-      "/img/t20_3.jpg",
-      "/img/t20_4.jpg",
-      "/img/t20_5.jpg",
     ],
     options: [
       "DeathSkull — hombro derecho",

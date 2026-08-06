@@ -31,6 +31,8 @@ export type RsvpRecord = {
   // Se llenan al escanear el QR de la puerta (ver src/lib/checkin.ts).
   turn: number | null;
   checkedInAt: Timestamp | null;
+  // Lo marca JL desde /proyeccion cuando el testigo termina de declarar.
+  declaredAt: Timestamp | null;
 };
 
 export type AssignedQuestion = { id: string; text: string };
@@ -106,6 +108,7 @@ export async function submitRsvp(rawName: string, confirmation: Confirmation) {
         createdAt: Timestamp;
         turn?: number | null;
         checkedInAt?: Timestamp | null;
+        declaredAt?: Timestamp | null;
       })
     : null;
 
@@ -130,9 +133,11 @@ export async function submitRsvp(rawName: string, confirmation: Confirmation) {
     questionText: assigned?.text ?? null,
     createdAt: existing?.createdAt ?? serverTimestamp(),
     // Se preservan: actualizar la declaración no debe borrar el ingreso ya
-    // registrado en la puerta ni el turno asignado.
+    // registrado en la puerta, el turno asignado, ni la marca de que ya
+    // declaró en el estrado.
     turn: existing?.turn ?? null,
     checkedInAt: existing?.checkedInAt ?? null,
+    declaredAt: existing?.declaredAt ?? null,
   });
 
   return assigned;
@@ -207,7 +212,16 @@ function toRsvpRecord(
     createdAt: (data.createdAt as Timestamp | null) ?? null,
     turn: (data.turn as number | null) ?? null,
     checkedInAt: (data.checkedInAt as Timestamp | null) ?? null,
+    declaredAt: (data.declaredAt as Timestamp | null) ?? null,
   };
+}
+
+// Marca (o desmarca) que un testigo ya declaró. Solo el admin puede hacerlo:
+// lo imponen las reglas de Firestore, no solo la UI.
+export async function setDeclared(uid: string, declared: boolean) {
+  await updateDoc(doc(db, "rsvps", uid), {
+    declaredAt: declared ? serverTimestamp() : null,
+  });
 }
 
 // Suscripción para la pantalla de proyección: trae toda la colección (son

@@ -51,6 +51,7 @@ export async function checkIn(): Promise<CheckInResult> {
         questionText?: string | null;
         createdAt?: Timestamp;
         turn?: number | null;
+        declaredAt?: Timestamp | null;
       })
     : null;
 
@@ -83,6 +84,7 @@ export async function checkIn(): Promise<CheckInResult> {
     createdAt: existing?.createdAt ?? serverTimestamp(),
     turn,
     checkedInAt: serverTimestamp(),
+    declaredAt: existing?.declaredAt ?? null,
   });
 
   return { turn, name, questionText, alreadyCheckedIn: false };
